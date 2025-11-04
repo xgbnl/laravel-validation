@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Elephant\Validation\Validation;
 
 use Exception;
-use Elephant\Validation\Contacts\Resources\DataTransfer;
 use Elephant\Validation\Contacts\Validation\Scene\SceneValidatable;
 use Elephant\Validation\Contacts\Validation\Validatable;
 use Elephant\Validation\Contacts\Validation\ValidateWhenScene;
@@ -13,19 +12,17 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\Validation\Validator as ValidatorContacts;
+use function data_get;
 
 abstract class Validator extends FormRequest implements Validatable, ValidateWhenScene
 {
     use ValidateWhenSceneTrait;
-
-    protected readonly DataTransfer $resource;
 
     protected readonly SceneValidatable $scene;
 
     private bool $autoValidate;
 
     public function __construct(
-        DataTransfer     $resource,
         SceneValidatable $scene,
         array            $query = [],
         array            $request = [],
@@ -35,9 +32,7 @@ abstract class Validator extends FormRequest implements Validatable, ValidateWhe
         array            $server = [],
         mixed            $content = null,
         bool             $autoValidate = false
-    )
-    {
-        $this->resource = $resource;
+    ) {
 
         $this->autoValidate = $autoValidate;
 
@@ -46,28 +41,15 @@ abstract class Validator extends FormRequest implements Validatable, ValidateWhe
         parent::__construct($query, $request, $attributes, $cookies, $files, $server, $content);
     }
 
-    public function validateForm(): DataTransfer
-    {
-        $validated = $this->validateRaw();
-
-        if ($this->resource->isNotEmpty()) {
-            $this->resource->flush();
-        }
-
-        return $this->resource->extra($validated);
-    }
-
-    public function validateRaw(): array
+    public function validatedData(array|int|string|null  $key = null, mixed $default = null): array
     {
         try {
-
-            $formData = $this->resolveValidator()->validated();
-
+            $validated = $this->resolveValidator()->validated();
         } catch (ValidationException $validationException) {
             $this->failedValidationException($validationException);
         }
 
-        return $formData;
+        return data_get($validated, $key, $default);
     }
 
     final public function validateResolved(): void
@@ -89,7 +71,6 @@ abstract class Validator extends FormRequest implements Validatable, ValidateWhe
             if ($instance->fails()) {
                 $this->failedValidation($instance);
             }
-
         } catch (ValidationException $validationException) {
             $this->failedValidationException($validationException);
         } catch (AuthorizationException $e) {
@@ -105,7 +86,8 @@ abstract class Validator extends FormRequest implements Validatable, ValidateWhe
             message: $exception instanceof ValidationException
                 ? $exception->validator->errors()->first()
                 : $exception->getMessage(),
-            previous: $exception);
+            previous: $exception
+        );
     }
 
     abstract public function rules(): array;

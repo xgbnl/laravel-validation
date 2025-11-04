@@ -4,23 +4,17 @@ declare(strict_types=1);
 
 namespace Elephant\Validation\Scenes;
 
-use Elephant\Validation\Contacts\Resources\DataTransfer;
 use Elephant\Validation\Contacts\Validation\Scene\SceneValidatable;
 use Elephant\Validation\Contacts\Validation\Validatable;
 use Elephant\Validation\Contacts\Validation\ValidateWhenScene;
 use Elephant\Validation\Contacts\Validation\Scene;
 
-final class SceneManager implements SceneValidatable
+class SceneManager implements SceneValidatable
 {
 
     protected ?string $scene = null;
 
-    protected readonly DataTransfer $resource;
-
-    public function __construct(DataTransfer $resource)
-    {
-        $this->resource = $resource;
-    }
+    protected array $extraRules = [];
 
     public function withScene(string $scene): ValidateWhenScene
     {
@@ -35,7 +29,7 @@ final class SceneManager implements SceneValidatable
             $rule = [$rule];
         }
 
-        $this->resource->extra($rule);
+        $this->extraRules = array_merge($this->extraRules, $rule);
 
         return $this;
     }
@@ -54,7 +48,7 @@ final class SceneManager implements SceneValidatable
 
     public function hasRule(): bool
     {
-        return $this->resource->isNotEmpty();
+        return !empty($this->extraRules);
     }
 
     public function mergeRules(Validatable|ValidateWhenScene $validatable): array
@@ -64,7 +58,7 @@ final class SceneManager implements SceneValidatable
 
     protected function getRules(Validatable|ValidateWhenScene $validatable): array
     {
-        return array_reduce($this->resource->values(), function (array $extendRules, string $method) use ($validatable): array {
+        return array_reduce($this->extraRules, function (array $extendRules, string $method) use ($validatable): array {
 
             $ruleMethod = "{$method}Rules";
 
