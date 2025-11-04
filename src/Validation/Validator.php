@@ -41,7 +41,7 @@ abstract class Validator extends FormRequest implements Validatable, ValidateWhe
         parent::__construct($query, $request, $attributes, $cookies, $files, $server, $content);
     }
 
-    public function validatedData(array|int|string|null  $key = null, mixed $default = null): array
+    public function validatedData(array|int|string|null  $key = null, mixed $default = null): mixed
     {
         try {
             $validated = $this->resolveValidator()->validated();
