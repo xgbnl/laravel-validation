@@ -54,12 +54,14 @@ abstract class Validator extends FormRequest implements Validatable, ValidateWhe
 
         $safeData = data_get($validated, $key, $default);
 
-        if (is_array($safeData)) {
-            foreach (array_intersect_key($this->aliases, $safeData) as $old => $alias) {
-                if ($old !== $alias) {
-                    $safeData[$alias] = $safeData[$old];
-                    unset($safeData[$old]);
-                }
+        if (!is_array($safeData)) {
+            return $safeData;
+        }
+
+        foreach (array_intersect_key($this->aliases, $safeData) as $old => $alias) {
+            if ($old !== $alias) {
+                $safeData[$alias] = $safeData[$old];
+                unset($safeData[$old]);
             }
         }
 
@@ -68,7 +70,7 @@ abstract class Validator extends FormRequest implements Validatable, ValidateWhe
 
     public function makeAlias(array $aliases): Validatable
     {
-        $this->aliases = !empty($this->aliases) ? array_merge($this->aliases, $aliases) : $aliases;
+        $this->aliases = $aliases;
 
         return $this;
     }
