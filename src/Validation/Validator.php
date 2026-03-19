@@ -22,6 +22,8 @@ abstract class Validator extends FormRequest implements Validatable, ValidateWhe
 
     private bool $autoValidate;
 
+    private array $aliases = [];
+
     public function __construct(
         SceneValidatable $scene,
         array            $query = [],
@@ -32,7 +34,8 @@ abstract class Validator extends FormRequest implements Validatable, ValidateWhe
         array            $server = [],
         mixed            $content = null,
         bool             $autoValidate = false
-    ) {
+    )
+    {
 
         $this->autoValidate = $autoValidate;
 
@@ -41,7 +44,7 @@ abstract class Validator extends FormRequest implements Validatable, ValidateWhe
         parent::__construct($query, $request, $attributes, $cookies, $files, $server, $content);
     }
 
-    public function validatedData(array|int|string|null  $key = null, mixed $default = null): mixed
+    public function validatedData(array|int|string|null $key = null, mixed $default = null): mixed
     {
         try {
             $validated = $this->resolveValidator()->validated();
@@ -49,7 +52,25 @@ abstract class Validator extends FormRequest implements Validatable, ValidateWhe
             $this->failedValidationException($validationException);
         }
 
-        return data_get($validated, $key, $default);
+        $safeData = data_get($validated, $key, $default);
+
+        if (is_array($safeData)) {
+            foreach (array_intersect_key($this->aliases, $safeData) as $old => $alias) {
+                if ($old !== $alias) {
+                    $safeData[$alias] = $safeData[$old];
+                    unset($safeData[$old]);
+                }
+            }
+        }
+
+        return $safeData;
+    }
+
+    public function makeAlias(array $aliases): Validatable
+    {
+        $this->aliases = !empty($this->aliases) ? array_merge($this->aliases, $aliases) : $aliases;
+
+        return $this;
     }
 
     final public function validateResolved(): void

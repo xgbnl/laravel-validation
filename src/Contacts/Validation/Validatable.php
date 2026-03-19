@@ -8,5 +8,7 @@ interface Validatable
 
     public function hasRuleMethod(string $name): bool;
 
-    public function validatedData(array|int|string|null  $key = null, mixed $default = null): mixed;
+    public function validatedData(array|int|string|null $key = null, mixed $default = null): mixed;
+
+    public function makeAlias(array $aliases): Validatable;
 }
