@@ -11,4 +11,6 @@ interface Validatable
     public function validatedData(array|int|string|null $key = null, mixed $default = null): mixed;
 
     public function makeAlias(array $aliases): Validatable;
+
+    public function aliases(): array;
 }

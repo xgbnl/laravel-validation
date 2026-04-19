@@ -16,7 +16,7 @@ use function data_get;
 
 abstract class Validator extends FormRequest implements Validatable, ValidateWhenScene
 {
-    use ValidateWhenSceneTrait;
+    use ValidateWhenSceneTrait, WithValidationAliases;
 
     protected readonly SceneValidatable $scene;
 
@@ -58,12 +58,9 @@ abstract class Validator extends FormRequest implements Validatable, ValidateWhe
             return $safeData;
         }
 
-        foreach (array_intersect_key($this->aliases, $safeData) as $old => $alias) {
-            if ($old !== $alias) {
-                $safeData[$alias] = $safeData[$old];
-                unset($safeData[$old]);
-            }
-        }
+        $aliases = $this->aliases ?? $this->aliases();
+
+        $this->applyAliasesToSafeData($safeData, $aliases);
 
         return $safeData;
     }
@@ -73,6 +70,11 @@ abstract class Validator extends FormRequest implements Validatable, ValidateWhe
         $this->aliases = $aliases;
 
         return $this;
+    }
+
+    public function aliases(): array
+    {
+        return [];
     }
 
     final public function validateResolved(): void
