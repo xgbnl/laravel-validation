@@ -58,7 +58,7 @@ abstract class Validator extends FormRequest implements Validatable, ValidateWhe
             return $safeData;
         }
 
-        $aliases = $this->aliases ?? $this->aliases();
+        $aliases = empty($this->aliases) ? $this->aliases() : $this->aliases;
 
         $this->applyAliasesToSafeData($safeData, $aliases);
 
